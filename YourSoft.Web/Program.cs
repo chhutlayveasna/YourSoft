@@ -1,3 +1,4 @@
+using EntityFrameworkCore.UseRowNumberForPaging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, builder => builder.UseRowNumberForPaging()));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Add Cors Policy
@@ -57,6 +58,9 @@ builder.Services.AddAutoMapper(typeof(MapperConfig));
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<ISampleRepository, SampleRepository>();
 builder.Services.AddScoped<IAuthManager, AuthManager>();
+
+// For Getting URI
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using YourSoft.BLL.Contracts;
+using YourSoft.BLL.Models;
 using YourSoft.BLL.Models.Sample;
 using YourSoft.DAL.Data;
 
@@ -23,19 +24,27 @@ namespace YourSoft.Web.Controllers.API
             _sampleRepository = sampleRepository;
         }
 
-        // GET: api/Samples
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<SampleDto>>> GetSamples()
+        // GET: api/Samples/GetAll
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<Response<SampleDto>>> GetSamples()
         {
             var samples = await _sampleRepository.GetAllAsync();
             var records = _mapper.Map<List<SampleDto>>(samples);
-            return Ok(records);
+            return Ok(new Response<SampleDto> { Data = records, Message = "success", StatusCode = StatusCodes.Status200OK });
+        }
+
+        // GET: api/Samples/?StartIndex=0&pagesize=25&PageNumber=1
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<SampleDto>>> GetPagedSamples([FromQuery] QueryParameters queryParameters)
+        {
+            var pagedSamplesResult = await _sampleRepository.GetAllAsync<SampleDto>(queryParameters);
+            return Ok(pagedSamplesResult);
         }
 
         // GET: api/Samples/5
         [HttpGet("{id}")]
         //[Authorize(Roles = "MANAGE SAMPLE")]
-        public async Task<ActionResult<SampleDto>> GetSample(int id)
+        public async Task<ActionResult<Response<SampleDto>>> GetSample(int id)
         {
             var sample = await _sampleRepository.GetAsync(id);
 
@@ -44,7 +53,7 @@ namespace YourSoft.Web.Controllers.API
 
             var sampleDto = _mapper.Map<SampleDto>(sample);
 
-            return Ok(sampleDto);
+            return Ok(new ResponseResult<SampleDto> { Data = sampleDto, Message = "success", StatusCode = StatusCodes.Status200OK });
         }
 
         // PUT: api/Samples/5

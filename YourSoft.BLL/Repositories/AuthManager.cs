@@ -39,7 +39,8 @@ namespace YourSoft.BLL.Repositories
             var token = await GenerateToken();
             return new AuthResponseDto
             {
-                Token = token,
+                Token = token.Token,
+                Expiration = token.Expiration,
                 UserId = _user.Id,
                 RefreshToken = await CreateRefreshToken()
             };
@@ -77,7 +78,8 @@ namespace YourSoft.BLL.Repositories
                 var token = await GenerateToken();
                 return new AuthResponseDto
                 {
-                    Token = token,
+                    Token = token.Token,
+                    Expiration = token.Expiration,
                     UserId = _user.Id,
                     RefreshToken = await CreateRefreshToken()
                 };
@@ -95,7 +97,7 @@ namespace YourSoft.BLL.Repositories
             return newRefreshToken;
         }
 
-        private async Task<string> GenerateToken()
+        private async Task<AuthToken> GenerateToken()
         {
             var securitykey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
 
@@ -114,15 +116,21 @@ namespace YourSoft.BLL.Repositories
             }
             .Union(userClaims).Union(roleClaims);
 
+            var expires = DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["JwtSettings:DurationInMinutes"]));
+
             var token = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"],
                 audience: _configuration["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToInt32(_configuration["JwtSettings:DurationInMinutes"])),
+                expires: expires,
                 signingCredentials: credentials
                 );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return new AuthToken
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                Expiration = expires,
+            };
         }
     }
 }
