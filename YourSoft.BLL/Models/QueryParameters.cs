@@ -4,8 +4,10 @@
     {
         private int _pageSize = 10;
         public int Page { get; set; } = 1;
-        public string SortBy { get; set; } = "Id";
-        public string OrderBy { get; set; } = "ASC";
+        public string SortBy { get; set; } = "";
+        public string OrderBy { get; set; } = "asc";
+        public string Search { get; set; } = "";
+        public string SearchBy { get; set; } = "";
         public int PageSize
         {
             get

@@ -51,14 +51,76 @@ namespace YourSoft.BLL.Repositories
             if (queryParameters.Page == 0)
                 queryParameters.Page = 1;
 
-            var totalSize = await _context.Set<T>().CountAsync();
-            var data = await _context.Set<T>()
-                .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
-                .Take(queryParameters.PageSize)
-                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+            var totalSize = (queryParameters.SearchBy != "") ? await _context.Set<T>().Where(x => EF.Property<object>(x, queryParameters.SearchBy).Equals(queryParameters.Search)).CountAsync() : await _context.Set<T>().CountAsync();
+            var pageCount = (double)((decimal)totalSize / Convert.ToDecimal(queryParameters.PageSize));
 
-            double pageCount = (double)((decimal)totalSize / Convert.ToDecimal(queryParameters.PageSize));
+            var data = new List<TResult>();
+
+            if (queryParameters.SortBy != "" && queryParameters.SortBy.ToLower() == "asc")
+            {
+                if (queryParameters.SearchBy != "")
+                {
+                    data = await _context.Set<T>()
+                    .OrderBy(x => EF.Property<object>(x, queryParameters.OrderBy))
+                    //.Where(x => EF.Property<object>(x, queryParameters.SearchBy).Contains(queryParameters.Search))
+                    .Where(x => EF.Property<object>(x, queryParameters.SearchBy).Equals(queryParameters.Search))
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+                else
+                {
+                    data = await _context.Set<T>()
+                    .OrderBy(x => EF.Property<object>(x, queryParameters.OrderBy))
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+            }
+            else if (queryParameters.SortBy != "" && queryParameters.SortBy.ToLower() == "desc")
+            {
+                if (queryParameters.SearchBy != "")
+                {
+                    data = await _context.Set<T>()
+                    .OrderByDescending(x => EF.Property<object>(x, queryParameters.OrderBy))
+                    .Where(x => EF.Property<object>(x, queryParameters.SearchBy).Equals(queryParameters.Search))
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+                else
+                {
+                    data = await _context.Set<T>()
+                    .OrderByDescending(x => EF.Property<object>(x, queryParameters.OrderBy))
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+            }
+            else
+            {
+                if (queryParameters.SearchBy != "")
+                {
+                    data = await _context.Set<T>()
+                    .Where(x => EF.Property<object>(x, queryParameters.SearchBy).Equals(queryParameters.Search))
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+                else
+                {
+                    data = await _context.Set<T>()
+                    .Skip((queryParameters.Page - 1) * queryParameters.PageSize)
+                    .Take(queryParameters.PageSize)
+                    .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                }
+            }
 
             return new PagedResult<TResult>
             {

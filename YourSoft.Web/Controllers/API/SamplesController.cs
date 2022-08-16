@@ -37,8 +37,20 @@ namespace YourSoft.Web.Controllers.API
         [HttpGet]
         public async Task<ActionResult<PagedResult<SampleDto>>> GetPagedSamples([FromQuery] QueryParameters queryParameters)
         {
-            var pagedSamplesResult = await _sampleRepository.GetAllAsync<SampleDto>(queryParameters);
-            return Ok(pagedSamplesResult);
+            try
+            {
+                var pagedSamplesResult = await _sampleRepository.GetAllAsync<SampleDto>(queryParameters);
+                return Ok(pagedSamplesResult);
+            }
+            catch (Exception)
+            {
+                var response = new PagedResult<SampleDto>
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Sort by column name is missing or must match with the property naming convention.",
+                };
+                return StatusCode(StatusCodes.Status400BadRequest, response);
+            }
         }
 
         // GET: api/Samples/5
